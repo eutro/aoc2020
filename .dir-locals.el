@@ -1,6 +1,7 @@
 ((nil
   .
-  ((eval
+  ((indent-tabs-mode . nil)
+   (eval
     .
     (defun aoc-compile-and-run ()
       (interactive)
