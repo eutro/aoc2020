@@ -58,12 +58,12 @@ void aoc_1b() {
                expense * target * (2020 - expense - target));
         fclose(input);
         return;
-      } else {
-        expenses[expense] = 1;
       }
     }
-    expenses[expense] = 1;
-    targets[i] = 2020 - expense;
+    if (expense <= 2020) {
+      expenses[expense] = 1;
+      targets[i] = 2020 - expense;
+    }
   }
 
   fclose(input);
