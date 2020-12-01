@@ -2,12 +2,7 @@
 
 // O(n)
 void aoc_1a() {
-  int expenses[2021];
-
-  for (int i = 0; i < 2021; ++i) {
-    expenses[i] = 0;
-  }
-
+  int expenses[2021] = {};
   FILE *input = fopen("input/1.txt", "r");
   int expense, target;
   while (fscanf(input, "%d", &expense) > 0) {
@@ -30,12 +25,7 @@ void aoc_1a() {
 
 // O(n^2)
 void aoc_1b() {
-  int expenses[2021];
-
-  for (int i = 0; i < 2021; ++i) {
-    expenses[i] = 0;
-  }
-
+  int expenses[2021] = {};
   FILE *input = fopen("input/1.txt", "r");
   int c, lineCount = 0;
   while ((c = getc(input)) != EOF) {
