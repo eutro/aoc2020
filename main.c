@@ -9,18 +9,18 @@ void aoc_1a() {
   }
 
   FILE *input = fopen("input/1.txt", "r");
-  int read, target;
-  while (fscanf(input, "%d", &read) > 0) {
-    target = 2020 - read;
+  int expense, target;
+  while (fscanf(input, "%d", &expense) > 0) {
+    target = 2020 - expense;
     if (target < 0) {
       // all expenses are less than 2020 but better to be safe
       continue;
     } else if (expenses[target]) {
-      printf("Product: %d * %d = %d\n", read, target, read * target);
+      printf("Product: %d * %d = %d\n", expense, target, expense * target);
       fclose(input);
       return;
     } else {
-      expenses[read] = 1;
+      expenses[expense] = 1;
     }
   }
 
@@ -37,7 +37,6 @@ void aoc_1b() {
   }
 
   FILE *input = fopen("input/1.txt", "r");
-
   int c, lineCount = 0;
   while ((c = getc(input)) != EOF) {
     if (c == '\n') {
@@ -46,25 +45,25 @@ void aoc_1b() {
   }
   fseek(input, 0, SEEK_SET);
 
-  int read, i, j, target;
+  int expense, i, j, target;
   int targets[lineCount];
-  for (i = 0; i < lineCount && (fscanf(input, "%d", &read) > 0); i++) {
+  for (i = 0; i < lineCount && (fscanf(input, "%d", &expense) > 0); i++) {
     for (j = 0; j < i; j++) {
-      target = targets[j] - read;
+      target = targets[j] - expense;
       if (target < 0) {
         continue;
       } else if (expenses[target]) {
         printf("Product: %d * %d * %d = %d\n",
-               read, target, (2020 - read - target),
-               read * target * (2020 - read - target));
+               expense, target, (2020 - expense - target),
+               expense * target * (2020 - expense - target));
         fclose(input);
         return;
       } else {
-        expenses[read] = 1;
+        expenses[expense] = 1;
       }
     }
-    expenses[read] = 1;
-    targets[i] = 2020 - read;
+    expenses[expense] = 1;
+    targets[i] = 2020 - expense;
   }
 
   fclose(input);
