@@ -5,8 +5,12 @@ int traverse_slope(FILE *fp, int dx, int dy) {
   int trees = 0;
   int xPos = 0;
   int yPos = -1;
-  char line[64];
 
+  int lineLength = 0;
+  fseek(fp, 0, SEEK_SET);
+  while (getc(fp) != '\n') ++lineLength;
+
+  char line[lineLength];
   fseek(fp, 0, SEEK_SET);
   while (fscanf(fp, "%s", &line[0]) > 0) {
     ++yPos;
@@ -14,7 +18,7 @@ int traverse_slope(FILE *fp, int dx, int dy) {
     if (line[xPos] == '#') {
       ++trees;
     }
-    xPos = (xPos + dx) % strlen(line);
+    xPos = (xPos + dx) % lineLength;
   }
 
   return trees;
