@@ -5,6 +5,14 @@ These are my solutions to [Advent of Code](https://adventofcode.com) 2020,
 
 ## Building
 
-Well there's only one file here, `main.c` so just use your preferred C compiler on it I guess?
+Run `make` and then run with `./aoc` or `./aoc <day...>`.
 
-There's a Makefile so if you're lucky you can run `make` to build, then `./aoc` to run.
+If you're using Emacs, you can call
+
+<kbd>M-x</kbd> <kbd>aoc-all</kbd> <kbd>RET</kbd>
+
+to execute all days, or
+
+<kbd>M-x</kbd> <kbd>aoc-day</kbd> <kbd>RET</kbd> <kbd><day></kbd> <kbd>RET</kbd>
+
+to execute a single day.
