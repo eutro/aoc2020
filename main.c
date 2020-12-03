@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 // O(n)
 void aoc_1a() {
@@ -112,6 +113,44 @@ void aoc_2b() {
   printf("Valid: %d out of %d\n", count, total);
 }
 
+int aoc_3_traverseSlope(FILE *fp, int dx, int dy) {
+  int trees = 0;
+  int xPos = 0;
+  int yPos = -1;
+  char line[64];
+
+  fseek(fp, 0, SEEK_SET);
+  while (fscanf(fp, "%s", &line[0]) > 0) {
+    ++yPos;
+    if ((yPos % dy) > 0) continue;
+    if (line[xPos] == '#') {
+      ++trees;
+    }
+    xPos = (xPos + dx) % strlen(line);
+  }
+
+  return trees;
+}
+
+void aoc_3a() {
+  FILE *input = fopen("input/3.txt", "r");
+  printf("Trees: %d\n", aoc_3_traverseSlope(input, 3, 1));
+  fclose(input);
+}
+
+void aoc_3b() {
+  FILE *input = fopen("input/3.txt", "r");
+  long d = aoc_3_traverseSlope(input, 7, 1);
+  long c = aoc_3_traverseSlope(input, 5, 1);
+  long b = aoc_3_traverseSlope(input, 3, 1);
+  long a = aoc_3_traverseSlope(input, 1, 1);
+  long e = aoc_3_traverseSlope(input, 1, 2);
+  printf("Trees: %ld * %ld * %ld * %ld * %ld = %ld",
+         a, b, c, d, e,
+         a * b * c * d * e);
+  fclose(input);
+}
+
 int main() {
   printf("Day 1:\n");
   aoc_1a();
@@ -119,5 +158,8 @@ int main() {
   printf("Day 2:\n");
   aoc_2a();
   aoc_2b();
+  printf("Day 3:\n");
+  aoc_3a();
+  aoc_3b();
   return 0;
 }
