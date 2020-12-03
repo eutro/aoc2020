@@ -9,11 +9,15 @@
                                         (or load-file-name
                                             (buffer-file-name)))
                                       "Makefile")
-              " && make -k"))
+              " && make -k")))
+   (eval
+    .
     (defun aoc-all ()
       (interactive)
       (compile (concat (aoc-compile-command)
-		       " && ./aoc")))
+		       " && ./aoc"))))
+   (eval
+    .
     (defun aoc-day (day)
       (interactive "nDay: ")
       (compile (concat (aoc-compile-command)
