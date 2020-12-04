@@ -3,9 +3,9 @@
 #include "days.h"
 
 int main(int argc, char **argv) {
-  int dayCount = 3;
+  int dayCount = 4;
   int day;
-  void (*days[])() = {day1, day2, day3};
+  void (*days[])() = {day1, day2, day3, day4};
   if (argc > 1) {
     int i;
     for (i = 1; i < argc; ++i) {
@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
       }
     }
   } else {
-    for (day = 0; day < dayCount; day++) {
+    for (day = 0; day < dayCount; ++day) {
       printf("Day %d:\n", day + 1);
       (days[day])();
     }

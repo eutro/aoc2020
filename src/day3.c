@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 
 int traverse_slope(FILE *fp, int dx, int dy) {
   int trees = 0;
