@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 
 #define PASS_LEN 10
 

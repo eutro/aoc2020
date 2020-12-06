@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+#define FULL_MASK (1 << 27) - 1
+
 int count_set_bits(int n) {
     int count = 0;
     while (n) {
@@ -14,8 +16,7 @@ void day6() {
   int counter = 0;
   int allCounter = 0;
   int mask = 0;
-  int allMask = 0;
-  int blank = 1;
+  int allMask = FULL_MASK;
   int privateMask = 0;
   int i;
   char line[32];
@@ -25,18 +26,12 @@ void day6() {
       counter += count_set_bits(mask);
       allCounter += count_set_bits(allMask);
       mask = 0;
-      allMask = 0;
-      blank = 1;
+      allMask = FULL_MASK;
     } else {
       for (i = 0; line[i] != '\n'; ++i) {
         privateMask |= 1 << (line[i] - 'a');
       }
-      if (blank) {
-        allMask = privateMask;
-        blank = 0;
-      } else {
-        allMask &= privateMask;
-      }
+      allMask &= privateMask;
       mask |= privateMask;
       privateMask = 0;
     }
