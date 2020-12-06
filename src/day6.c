@@ -1,14 +1,13 @@
 #include <stdio.h>
 
-int count_set_bits(int n) 
-{ 
-    int count = 0; 
-    while (n) { 
-        count += n & 1; 
-        n >>= 1; 
-    } 
-    return count; 
-} 
+int count_set_bits(int n) {
+    int count = 0;
+    while (n) {
+        count += n & 1;
+        n >>= 1;
+    }
+    return count;
+}
 
 void day6() {
   FILE *input = fopen("input/6.txt", "r");
