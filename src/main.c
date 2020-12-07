@@ -3,11 +3,11 @@
 #include "days.h"
 
 int main(int argc, char **argv) {
-  int dayCount = 6;
+  int dayCount = 7;
   int day;
   void (*days[])() = {
     day1, day2, day3, day4, day5,
-    day6
+    day6, day7
   };
   if (argc > 1) {
     int i;
