@@ -55,6 +55,7 @@ int get_wrappers(RULE *rules, char *bag) {
   ENTRY *bagSet = NULL;
   int bagCount = 0;
   wrappers_loop(rules, &bagSet, &bagCount, bag);
+  HASH_CLEAR(hh, bagSet);
   return bagCount;
 }
 
@@ -181,6 +182,7 @@ void day7() {
       free(entry);
       entry = nextEntry;
     }
+    HASH_DEL(rules, rule);
     free(rule);
   }
 }
