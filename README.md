@@ -9,10 +9,17 @@ Run `make` and then run with `./aoc` or `./aoc <day...>`.
 
 If you're using Emacs, you can call
 
-<kbd>M-x</kbd> `aoc-all` <kbd>RET</kbd>
+<kbd>C-u</kbd> `<day>` <kbd>C-c</kbd> <kbd>C-r</kbd>
 
-to execute all days, or
+or
 
-<kbd>M-x</kbd> `aoc-day` <kbd>RET</kbd> `<day>` <kbd>RET</kbd>
+<kbd>C-u</kbd> <kbd>C-c</kbd> <kbd>C-r</kbd> `<day...>` <kbd>RET</kbd>
 
-to execute a single day.
+to execute a single day, or just
+
+<kbd>C-c</kbd> <kbd>C-r</kbd>
+
+to execute all days.
+
+<kbd>C-c</kbd> <kbd>C-r</kbd> is bound to `aoc-run`, so you can use
+<kbd>M-x</kbd> `aoc-run` <kbd>RET</kbd> as well.
