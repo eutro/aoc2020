@@ -5,8 +5,7 @@
 typedef struct entry {
   char bag[32];
   int count;
-  struct entry *nextContent;
-  struct entry *nextWrapper;
+  struct entry *next;
   UT_hash_handle hh; // needed for the set
 } ENTRY;
 
@@ -47,7 +46,7 @@ void wrappers_loop(RULE *rules, ENTRY **bagSet, int *bagCount, char *bag) {
       ++*bagCount;
       wrappers_loop(rules, bagSet, bagCount, entry->bag);
     }
-    entry = entry->nextWrapper;
+    entry = entry->next;
   }
 }
 
@@ -71,7 +70,7 @@ int get_contents(RULE *rules, char *bag) {
   while (entry != NULL) {
     //                           could cache but eh
     count += entry->count * (1 + get_contents(rules, entry->bag));
-    entry = entry->nextContent;
+    entry = entry->next;
   }
   return count;
 }
@@ -121,14 +120,14 @@ void day7() {
       strcpy(entry->bag, outBag);
 
       inRule = find_or_make_rule(&rules, inBag);
-      entry->nextWrapper = inRule->wrappers;
+      entry->next = inRule->wrappers;
       inRule->wrappers = entry;
 
       entry = (ENTRY *)malloc(sizeof(*entry));
       entry->count = count;
       strcpy(entry->bag, inBag);
 
-      entry->nextContent = outRule->contents;
+      entry->next = outRule->contents;
       outRule->contents = entry;
 
       if (count != 1) {
@@ -149,14 +148,14 @@ void day7() {
     while (entry != NULL) {
       ++wc;
       printf(" <- * %d %s\n", entry->count, entry->bag);
-      entry = entry->nextWrapper;
+      entry = entry->next;
     }
     int ic = 0;
     entry = rule->contents;
     while (entry != NULL) {
       ++ic;
       printf(" -> %d * %s\n", entry->count, entry->bag);
-      entry = entry->nextContent;
+      entry = entry->next;
     }
   }
   */
@@ -172,13 +171,13 @@ void day7() {
   HASH_ITER(hh, rules, rule, nextRule) {
     entry = rule->wrappers;
     while (entry != NULL) {
-      nextEntry = entry->nextWrapper;
+      nextEntry = entry->next;
       free(entry);
       entry = nextEntry;
     }
     entry = rule->contents;
     while (entry != NULL) {
-      nextEntry = entry->nextContent;
+      nextEntry = entry->next;
       free(entry);
       entry = nextEntry;
     }
