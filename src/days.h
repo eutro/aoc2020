@@ -7,3 +7,4 @@ void day6();
 void day7();
 void day8();
 void day9();
+void day10();
