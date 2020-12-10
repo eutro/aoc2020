@@ -91,7 +91,7 @@ Requires a key file \"session.key\" in the root directory of this repo."
                          "curl -fs -H\"Cookie: session=%s\" "
                          "\"https://adventofcode.com/2020/day/%s/input\" "
                          "> input/%s.txt "
-                         "&& printf \"Done\" || printf \"Errored!\"")
+                         "&& echo Done || echo Errored!")
                         aoc-root
                         (aoc-get-session)
                         day
@@ -104,6 +104,7 @@ Requires a key file \"session.key\" in the root directory of this repo."
     (define-key keys (kbd "C-c C-r") #'aoc-run)
     (define-key keys (kbd "C-c C-c") #'aoc-compile)
     (define-key keys (kbd "C-c C-f") #'aoc-fetch)
+    (define-key keys (kbd "C-c C-l") #'aoc-leaderboard)
     keys))
 
 (define-minor-mode aoc2020-eutro
@@ -113,9 +114,12 @@ Requires a key file \"session.key\" in the root directory of this repo."
   aoc-keymap)
 
 (defconst aoc-leaderboard-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "RET") #'aoc-expand-star)
-    map))
+  (let ((keys (make-sparse-keymap)))
+    (define-key keys (kbd "RET") #'aoc-expand-star)
+    (define-key keys (kbd "C-c C-l") #'aoc-leaderboard)
+    (define-key keys (kbd "g") #'aoc-reload-leaderboard)
+    (define-key keys (kbd "c") #'aoc-cycle-sort-mode)
+    keys))
 
 (define-derived-mode aoc-leaderboard-mode special-mode "AoC-Leaderboard"
   "A major mode for displaying an AoC leaderboard.")
@@ -227,7 +231,7 @@ This used to be the default."
 
 (defun aoc-insert-stars (member)
   "Insert the star count of MEMBER at point."
-  (insert (propertize (format " % 2d*" (aoc-get-stars member))
+  (insert (propertize (format "%3d*" (aoc-get-stars member))
                       'face 'aoc-gold-star-face)))
 
 (defconst aoc-sort-inserters
@@ -308,7 +312,7 @@ If the star was just expanded, collapse it instead."
   (dotimes (i 25)
     (aoc-insert-star member (1+ i)))
   (insert " ")
-  (insert (aoc-get-name member)))
+  (insert (or (aoc-get-name member) "-")))
 
 (defun aoc-insert-day-number (day)
   "Insert the DAY number at point and the next line."
@@ -326,7 +330,7 @@ If the star was just expanded, collapse it instead."
              'face face))))
 
 (defun aoc-populate-leaderboard-buffer ()
-  "Populate the leaderboard buffer with names, trees and stuff."
+  "Populate the leaderboard buffer with names, stars and stuff."
   (read-only-mode -1)
   (erase-buffer)
   (let* ((members (cdr (assoc 'members aoc-leaderboard-data)))
@@ -347,6 +351,18 @@ If the star was just expanded, collapse it instead."
         (aoc-insert-member (pop members-sorted)))))
   (newline)
   (read-only-mode t))
+
+(defun aoc-cycle-sort-mode ()
+  "Cycle the sort mode on the leaderboard."
+  (interactive)
+  (unless (eq major-mode 'aoc-leaderboard-mode)
+    (error "Not in leaderboard buffer"))
+  (setq aoc-sort-mode
+        (cdr (assoc aoc-sort-mode
+                    '((local . global)
+                      (global . stars)
+                      (stars . local)))))
+  (aoc-reload-leaderboard))
 
 (defun aoc-fetch-leaderboard-data ()
   "Fetch the AoC leaderboard data of `aoc-leaderboard-id'.
