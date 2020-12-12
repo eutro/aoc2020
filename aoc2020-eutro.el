@@ -91,7 +91,7 @@ Requires a key file \"session.key\" in the root directory of this repo."
                          "curl -fs -H\"Cookie: session=%s\" "
                          "\"https://adventofcode.com/2020/day/%s/input\" "
                          "> input/%s.txt "
-                         "&& echo Done || echo Errored!")
+                         "&& printf Done || printf Errored!")
                         aoc-root
                         (aoc-get-session)
                         day
