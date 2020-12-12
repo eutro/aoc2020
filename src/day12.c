@@ -10,8 +10,8 @@ typedef enum dir {
   NESW_COUNT,
 
   LEFT,
-  RIGHT,
-  FORWARD
+  FORWARD,
+  RIGHT
 } DIR;
 
 DIR get_dir(char c) {
@@ -48,8 +48,7 @@ void day12() {
       x += dxs[facing] * d;
       y += dys[facing] * d;
     } else {
-      int rot = dir == LEFT ? (NESW_COUNT - 1) : 1;
-      facing = (facing + rot * (d / 90)) % NESW_COUNT;
+      facing = (facing + (dir - FORWARD) * (d / 90)) % NESW_COUNT;
     }
   }
   printf("Distance: %d\n", abs(x) + abs(y));
@@ -71,8 +70,8 @@ void day12() {
     } else {
       for (int i = 0; i < d; i += 90) {
         int tx = wx;
-        wx = (dir == LEFT ? -1 : 1) * wy;
-        wy = (dir == LEFT ? 1 : -1) * tx;
+        wx = (dir - FORWARD) * wy;
+        wy = (FORWARD - dir) * tx;
       }
     }
   }
