@@ -162,6 +162,7 @@ void day16() {
     for (fieldi = 0; fieldi < fieldcount; ++fieldi) {
       if (issingleton(possiblefields[fieldi])) {
         resolved |= possiblefields[fieldi];
+        changed = true;
       } else {
         possiblefields[fieldi] &= ~resolved;
         if (issingleton(possiblefields[fieldi])) {
