@@ -33,7 +33,7 @@ Field getfirst(FieldSet set) {
 }
 
 bool issingleton(FieldSet set) {
-  return set == singleton(getfirst(set));
+  return set && (!(set & (set - 1)));
 }
 
 FieldSet checkfield(FieldDefs defs, Value value) {
@@ -153,7 +153,7 @@ void day16() {
   bool changed;
   FieldSet resolved = 0;
   // this part is O(m^2)
-  // all set operations are assumed to be O(1), including ffs
+  // all set operations are assumed to be O(1)
   // the inner loop occurs v times,
   // the outer loop occurs at most v times, if each loop resolves exactly one field
   do {
