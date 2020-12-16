@@ -119,7 +119,7 @@ void day16() {
     invalid = false;
     fieldcount = 0;
     while (fscanf(input, "%d", &value) == 1) {
-      // checking whether a given field is infieldid is O(1)
+      // checking whether a given field is invalid is O(1)
       if (setempty(checkfield(defs, value))) {
         invalid_score += value;
         invalid = true;
