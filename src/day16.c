@@ -178,7 +178,7 @@ void day16() {
   unsigned long product = 1;
   char *name;
   // O(m) at the end for multiplying the fields
-  // taking strstr to be O(1)
+  // taking strstr and ffs to be O(1)
   for (fieldi = 0; fieldi < fieldcount; ++fieldi) {
     if (issingleton(possiblefields[fieldi])) {
       name = names[getfirst(possiblefields[fieldi])];
