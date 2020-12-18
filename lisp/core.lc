@@ -1,0 +1,241 @@
+(define (map1 f l)
+  (if (nil? l)
+      nil
+      (cons (f (car l))
+            (map1 f (cdr l)))))
+
+(define (some f l)
+  (if (nil? l)
+      nil
+      ((lambda (v)
+         (if v v (some f (cdr l))))
+       (f (car l)))))
+
+(define (map f . ls)
+  (if (some nil? ls)
+      nil
+      (cons (apply f (map1 car ls))
+            (apply map f (map1 cdr ls)))))
+
+(define (put-macro name f)
+  ((lambda (entry)
+     (if entry
+         (set-cdr! entry f)
+         (define __macros__
+           (cons (cons name f)
+                 __macros__))))
+   (assoc __macros__ name)))
+
+(define (list? l)
+  (if (cons? l)
+      (list? (cdr l))
+      (nil? l)))
+
+(define (foldr f start seq)
+  (if seq
+      (f (car seq) (foldr f start (cdr seq)))
+      start))
+
+(define (foldl f start seq)
+  (if seq
+      (foldl f (f start (car seq)) (cdr seq))
+      start))
+
+(define (concat . ls)
+  (foldr concat1 nil ls))
+
+(put-macro
+ (intern "quote")
+ (lambda (form)
+   ((lambda*
+     (quoteloop form)
+     (if (list? form)
+         (cons (intern "list")
+               (map quoteloop form))
+         (if (cons? form)
+             (list (intern "cons")
+                   (quoteloop (car form))
+                   (quoteloop (cdr form)))
+             (if (symbol? form)
+                 (list (intern "intern")
+                       (name form))
+                 form))))
+    form)))
+
+(put-macro
+ 'quasiquote
+ (lambda (form)
+   (if (if form (list? form) nil)
+       (if (equal? 'unquote (car form))
+           (car (cdr form))
+           (foldr
+            (lambda (form rem)
+              (if (if form (list? form) nil)
+                  (if (equal? 'unquote (car form))
+                      (list 'cons
+                            (car (cdr form))
+                            rem)
+                      (if (equal? 'unquote-splicing (car form))
+                          (list 'concat
+                                (car (cdr form))
+                                rem)
+                          (list 'cons
+                                (list 'quasiquote form)
+                                rem)))
+                  (list 'cons
+                        (list 'quasiquote form)
+                        rem)))
+            nil
+            form))
+       (list 'quote form))))
+
+(put-macro
+ 'defmacro
+ (lambda (spec . tail)
+   `(put-macro ',(car spec)
+               (lambda* ,spec ,@tail))))
+
+(define (comp1 f g)
+  (lambda args (f (apply g args))))
+
+(define (comp f . gs)
+  (foldl comp1 f gs))
+
+(define (partial f . pargs)
+  (lambda args (apply f (concat pargs args))))
+
+(define (caar c) (car (car c)))
+(define (cadr c) (car (cdr c)))
+(define (cdar c) (cdr (car c)))
+(define (cddr c) (cdr (cdr c)))
+
+(define (caaar c) (car (caar c)))
+(define (caadr c) (car (cadr c)))
+(define (cadar c) (car (cdar c)))
+(define (caddr c) (car (cddr c)))
+(define (cdaar c) (cdr (caar c)))
+(define (cdadr c) (cdr (cadr c)))
+(define (cddar c) (cdr (cdar c)))
+(define (cdddr c) (cdr (cddr c)))
+
+(defmacro (let name? spec . body)
+  (apply
+   (lambda (sf+spec args body)
+     `((,@sf+spec ,@body) ,@args))
+   (if (symbol? name?)
+       (list (list 'lambda* (cons name? (map car spec)))
+             (map (comp (partial cons 'do) cdr) spec)
+             body)
+       (list (list 'lambda (map car name?))
+             (map (comp (partial cons 'do) cdr) name?)
+             (cons spec body)))))
+
+(defmacro (let* spec . body)
+  `(let (,(car spec))
+     ,@(if (cdr spec)
+           `((let* ,(cdr spec)
+               ,@body))
+           body)))
+
+(defmacro (cond clause . clauses)
+  `(if ,(car clause)
+       (do ,@(cdr clause))
+       ,(if clauses
+            `(cond ,@clauses)
+            nil)))
+
+(defmacro (and . exprs)
+  (if exprs
+      (if (cdr exprs)
+          `(if ,(car exprs)
+               (and ,@(cdr exprs))
+               nil)
+          (car exprs))
+      nil))
+
+(defmacro (or . exprs)
+  (if exprs
+      (if (cdr exprs)
+          ;; gensym?
+          `(let ((__or_result__ ,(car exprs)))
+             (if __or_result__
+                 __or_result__
+                 (or ,@(cdr exprs))))
+          (car exprs))
+      1))
+
+(define (last l)
+  "Last item in L, in linear time."
+  (if l
+      (if (cdr l)
+          (last (cdr l))
+          (car l))
+      nil))
+
+(define (butlast l)
+  "All but the last item in L, in linear time."
+  (if l
+      (if (cdr l)
+          (cons (car l) (butlast (cdr l)))
+          nil)
+      nil))
+
+(defmacro (when predicate . body)
+  `(if ,predicate (do ,@body) nil))
+
+(defmacro (unless predicate . body)
+  `(if ,predicate nil (do ,@body)))
+
+(define (not x) (if x nil 1))
+
+(define (any? x) 1)
+
+(define else 1)
+
+(define (list* . args)
+  "Prepends all of the previous arguments to the last argument."
+  (cond
+    ((nil? args) nil)
+    ((nil? (cdr args)) (car args))
+    (else (cons (car args)
+                (apply list* (cdr args))))))
+
+(defmacro (if-not predicate thenexpr elseexpr)
+  `(if ,predicate ,elsexpr ,thenexpr))
+
+(define (take-while f l)
+  (when (and l (f (car l)))
+    (cons (car l)
+          (take-while f (cdr l)))))
+
+(define (zero? x)
+  (equal? 0 x))
+
+(define (inc x)
+  (+ x 1))
+
+(define (dec x)
+  (+ x -1))
+
+(define (drop n l)
+  (if (or (zero? n) (not l))
+      l
+      (drop (dec n) (cdr l))))
+
+(define (constantly x)
+  (lambda _ x))
+
+(define (count l)
+  (let loop ((i 0)
+             (l l))
+    (if l (loop (inc i) (cdr l)) i)))
+
+(define (complement f)
+  (lambda args (not (apply f args))))
+
+(define (split-on f l)
+  (when l
+    (let ((taken (take-while (complement f) l)))
+      (cons taken (split-on f (drop (count taken) (cdr l)))))))
+
+nil
