@@ -2,11 +2,12 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "../lib/uthash.h"
+#include <string.h>
 
 #define IMAGE_SIZE 10
 #define MIDDLE_SIZE (IMAGE_SIZE - 2)
-#define PUZZLE_SIZE 3
+#define PUZZLE_SIZE 12
+#define PICTURE_SIZE (MIDDLE_SIZE * PUZZLE_SIZE)
 
 #define NBLBINPAT "%c%c%c%c"
 #define NBLBINFMT(nibble)      \
@@ -29,7 +30,7 @@ typedef enum side {
 } Side;
 
 // 64 bits
-typedef unsigned long Middle;
+typedef unsigned long long Middle;
 
 typedef struct image {
   short sides[SIDE_COUNT];
@@ -39,8 +40,6 @@ typedef struct image {
 typedef struct tile {
   Image im;
   int id;
-
-  UT_hash_handle hh;
 } Tile;
 
 static short REVTEN[1 << IMAGE_SIZE] = {};
@@ -110,13 +109,13 @@ void printmiddle(Middle m) {
   }
 }
 
-void printtile(Image *tile) {
-  printf("U: "TENBITPAT" L: "TENBITPAT" D: "TENBITPAT" R: "TENBITPAT"\n",
-         TENBITFMT(tile->sides[UP]),
-         TENBITFMT(tile->sides[LEFT]),
-         TENBITFMT(tile->sides[DOWN]),
-         TENBITFMT(tile->sides[RIGHT]));
-  printmiddle(tile->middle);
+void printtile(Tile *tile) {
+  printf("U: "TENBITPAT" R: "TENBITPAT" D: "TENBITPAT" L: "TENBITPAT"\n",
+         TENBITFMT(tile->im.sides[UP]),
+         TENBITFMT(tile->im.sides[RIGHT]),
+         TENBITFMT(tile->im.sides[DOWN]),
+         TENBITFMT(tile->im.sides[LEFT]));
+  printmiddle(tile->im.middle);
 }
 
 Middle flipvert(Middle x) {
@@ -132,9 +131,9 @@ Middle flipvert(Middle x) {
 }
 
 Middle flipdiag(Middle x) {
-  const Middle k1 = 0x5500550055005500;
-  const Middle k2 = 0x3333000033330000;
-  const Middle k4 = 0x0f0f0f0f00000000;
+  static const Middle k1 = 0x5500550055005500;
+  static const Middle k2 = 0x3333000033330000;
+  static const Middle k4 = 0x0f0f0f0f00000000;
   Middle t;
   t  = k4 & (x ^ (x << 28));
   x ^=       t ^ (t >> 28);
@@ -159,6 +158,7 @@ Middle rotatemiddle(Middle m, Side rotation) {
   return m;
 }
 
+// flips horizontally
 Middle flipmiddle(Middle m) {
   m =
     (((m & 0x8080808080808080) >> 7) |
@@ -170,19 +170,11 @@ Middle flipmiddle(Middle m) {
      ((m & 0x0202020202020202) << 5) |
      ((m & 0x0101010101010101) << 7));
   return m;
-  //  (((m & 0xFF00000000000000) >> (7 * 8)) |
-  //   ((m & 0x00FF000000000000) >> (5 * 8)) |
-  //   ((m & 0x0000FF0000000000) >> (3 * 8)) |
-  //   ((m & 0x000000FF00000000) >> (1 * 8)) |
-  //   ((m & 0x00000000FF000000) << (1 * 8)) |
-  //   ((m & 0x0000000000FF0000) << (3 * 8)) |
-  //   ((m & 0x000000000000FF00) << (5 * 8)) |
-  //   ((m & 0x00000000000000FF) << (7 * 8)));
 }
 
 void fliptile(Tile *tile) {
   // printf("Flipping: %d\n", tile->id);
-  // printtile(&tile->im);
+  // printtile(tile);
   for (Side s = 0; s < SIDE_COUNT; ++s) {
     tile->im.sides[s] = revten(tile->im.sides[s]);
   }
@@ -191,10 +183,12 @@ void fliptile(Tile *tile) {
   tile->im.sides[RIGHT] = tmp;
   tile->im.middle = flipmiddle(tile->im.middle);
   // printf("---\n");
-  // printtile(&tile->im);
+  // printtile(tile);
 }
 
 void rotatetile(Tile *tile, Side count) {
+  // printf("Rotating: %d\n", tile->id);
+  // printtile(tile);
   tile->im.middle = rotatemiddle(tile->im.middle, count);
   short tmp, last;
   for (Side i = 0; i < count; ++i) {
@@ -205,6 +199,8 @@ void rotatetile(Tile *tile, Side count) {
       last = tmp;
     }
   }
+  // printf("---\n");
+  // printtile(tile);
 }
 
 static int dxs[SIDE_COUNT] = { 0, 1, 0, -1 };
@@ -250,6 +246,37 @@ void printpuzzle(Tile *solved[PUZZLE_SIZE][PUZZLE_SIZE]) {
   }
 }
 
+void printpicture(bool picture[PICTURE_SIZE][PICTURE_SIZE]) {
+  for (int y = 0; y < PICTURE_SIZE; ++y) {
+    for (int x = 0; x < PICTURE_SIZE; ++x) {
+      printf("%c", picture[x][y] ? '#' : '.');
+    }
+    printf("\n");
+  }
+}
+
+void flippicture(bool picture[PICTURE_SIZE][PICTURE_SIZE]) {
+  bool tmp[PICTURE_SIZE];
+  int tx;
+  for (int x = 0; x < PICTURE_SIZE / 2; ++x) {
+    tx = PICTURE_SIZE - x - 1;
+    memcpy(tmp,         picture[x],  PICTURE_SIZE * sizeof(bool));
+    memcpy(picture[x],  picture[tx], PICTURE_SIZE * sizeof(bool));
+    memcpy(picture[tx], tmp,         PICTURE_SIZE * sizeof(bool));
+  }
+}
+
+// cw
+void rotatepicture(bool picture[PICTURE_SIZE][PICTURE_SIZE]) {
+  bool copied[PICTURE_SIZE][PICTURE_SIZE];
+  for (int x = 0; x < PICTURE_SIZE; ++x) {
+    for (int y = 0; y < PICTURE_SIZE; ++y) {
+      copied[y][PICTURE_SIZE - x - 1] = picture[x][y];
+    }
+  }
+  memcpy(picture, copied, PICTURE_SIZE * PICTURE_SIZE * sizeof(bool));
+}
+
 void trypermute(Tile *solved[PUZZLE_SIZE][PUZZLE_SIZE],
                 int x, int y) {
   Tile *this = solved[x][y];
@@ -286,21 +313,75 @@ void solvefrom(Tile *solved[PUZZLE_SIZE][PUZZLE_SIZE],
   }
 }
 
+void middlecpy(bool picture[PICTURE_SIZE][PICTURE_SIZE],
+               Middle m, int x, int y) {
+  for (int bit = 0; bit < (MIDDLE_SIZE * MIDDLE_SIZE); ++bit) {
+    picture[x * MIDDLE_SIZE + (bit % MIDDLE_SIZE)][y * MIDDLE_SIZE + (bit / MIDDLE_SIZE)]
+      = (m & (1L << ((MIDDLE_SIZE * MIDDLE_SIZE) - bit - 1))) != 0;
+  }
+}
+
+#define MONSTER_HEIGHT 3
+#define MONSTER_WIDTH 20
+
+bool checkmonsterat(bool picture[PICTURE_SIZE][PICTURE_SIZE],
+                    int x, int y) {
+  if (x + MONSTER_WIDTH > PICTURE_SIZE) return false;
+  if (x + MONSTER_HEIGHT > PICTURE_SIZE) return false;
+  static char *monster[] = {
+    "                  # ",
+    "#    ##    ##    ###",
+    " #  #  #  #  #  #   ",
+  };
+  for (int mx = 0; mx < MONSTER_WIDTH; ++mx) {
+    for (int my = 0; my < MONSTER_HEIGHT; ++my) {
+      if (monster[my][mx] == '#') {
+        if (!picture[x + mx][y + my]) return false;
+      }
+    }
+  }
+
+  for (int mx = 0; mx < MONSTER_WIDTH; ++mx) {
+    for (int my = 0; my < MONSTER_HEIGHT; ++my) {
+      if (monster[my][mx] == '#') {
+        picture[x + mx][y + my] = false;
+      }
+    }
+  }
+  return true;
+}
+
+int checkmonster(bool picture[PICTURE_SIZE][PICTURE_SIZE]) {
+  bool copied[PICTURE_SIZE][PICTURE_SIZE] = {};
+  memcpy(copied, picture, PICTURE_SIZE * PICTURE_SIZE * sizeof(bool));
+
+  bool found = false;
+  int count = 0;
+  for (int x = 0; x < PICTURE_SIZE; ++x) {
+    for (int y = 0; y < PICTURE_SIZE; ++y) {
+      found |= checkmonsterat(copied, x, y);
+      if (copied[x][y]) ++count;
+    }
+  }
+  return found ? count : -1;
+}
+
 void day20() {
   FILE *input = fopen("input/20.txt", "r");
   int i;
   Side s;
-  Tile *tmp, *tile, *tiles = NULL;
+  Tile *tile;
+  Tile tiles[PUZZLE_SIZE * PUZZLE_SIZE];
+  int tilecounter = 0;
 
   int side_counts[1 << IMAGE_SIZE] = {};
   TilePair lookup[1 << IMAGE_SIZE] = {};
 
   while (fscanf(input, "Tile %d:\n", &i) == 1) {
-    tile = malloc(sizeof(Tile));
+    tile = &tiles[tilecounter++];
     tile->id = i;
     readimage(input, &tile->im);
     getc(input);
-    HASH_ADD_INT(tiles, id, tile);
 
     for (s = 0; s < SIDE_COUNT; ++s) {
       side_counts[tile->im.sides[s]]++;
@@ -322,13 +403,13 @@ void day20() {
   fclose(input);
 
   Tile *corners[4] = {};
-  Tile *edges[(PUZZLE_SIZE - 2) * 4] = {};
 
   long cornerp = 1;
   int cornercount = 0;
   int edgecount = 0;
   int edgesides;
-  HASH_ITER(hh, tiles, tile, tmp) {
+  for (tilecounter = 0; tilecounter < PUZZLE_SIZE * PUZZLE_SIZE; ++tilecounter) {
+    tile = &tiles[tilecounter];
     edgesides = 0;
     for (s = 0; s < SIDE_COUNT; ++s) {
       edgesides += side_counts[tile->im.sides[s]] == 1;
@@ -339,9 +420,7 @@ void day20() {
     if (edgesides == 2) {
       corners[cornercount++] = tile;
       cornerp *= tile->id;
-    } else if (edgesides == 1) {
-      edges[edgecount++] = tile;
-    } else {
+    } else if (edgesides != 1) {
       fprintf(stderr, "Too edgy: %d\n", edgesides);
       exit(EXIT_FAILURE);
     }
@@ -358,5 +437,22 @@ void day20() {
 
   solvefrom(solved, lookup, 0, 0);
 
-  // TODO count sea monsters and stuff
+  bool picture[PICTURE_SIZE][PICTURE_SIZE] = {};
+  for (int y = 0; y < PUZZLE_SIZE; ++y) {
+    for (int x = 0; x < PUZZLE_SIZE; ++x) {
+      middlecpy(picture, solved[x][y]->im.middle, x, y);
+    }
+  }
+
+  int nonmonster;
+  for (int i = 0; i < 2; ++i) {
+    if ((nonmonster = checkmonster(picture)) != -1) break;
+    for (int r = 0; r < SIDE_COUNT; ++r) {
+      rotatepicture(picture);
+      if ((nonmonster = checkmonster(picture)) != -1) goto finishp2;
+    }
+    flippicture(picture);
+  }
+ finishp2:
+  printf("Roughness: %d pixels\n", nonmonster);
 }
