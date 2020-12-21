@@ -20,23 +20,23 @@ typedef struct ticket {
   Value values[MAX_FIELDS];
 } Ticket;
 
-bool setempty(FieldSet s) {
+static bool setempty(FieldSet s) {
   return s == 0;
 }
 
-FieldSet singleton(Field f) {
+static FieldSet singleton(Field f) {
   return 1 << f;
 }
 
-Field getfirst(FieldSet set) {
+static Field getfirst(FieldSet set) {
   return ffs(set) - 1;
 }
 
-bool issingleton(FieldSet set) {
+static bool issingleton(FieldSet set) {
   return set && (!(set & (set - 1)));
 }
 
-FieldSet checkfield(FieldDefs defs, Value value) {
+static FieldSet checkfield(FieldDefs defs, Value value) {
   return defs[value];
 }
 
