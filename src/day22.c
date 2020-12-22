@@ -21,9 +21,7 @@ static int pollb(ArrayDeque *d) {
   return d->values[--d->max];
 }
 
-static int dsize(ArrayDeque *d) {
-  return d->max - d->min;
-}
+#define dsize(d) (d->max - d->min)
 
 void printdeck(ArrayDeque *d) {
   for (int i = d->min; i < d->max; ++i) {
@@ -46,13 +44,15 @@ static void pushb(ArrayDeque *d, int v) {
   d->values[d->max++] = v;
 }
 
-static ArrayDeque *copyd(ArrayDeque *d) {
+static ArrayDeque *sliced(ArrayDeque *d, int start, int end) {
   ArrayDeque *r = malloc(sizeof(*d));
-  memcpy(r->values, &d->values[d->min], sizeof(int) * dsize(d));
   r->min = 0;
-  r->max = dsize(d);
+  r->max = end - start;
+  memcpy(r->values, &d->values[d->min + start], sizeof(int) * r->max);
   return r;
 }
+
+#define copyd(d) sliced(d, 0, dsize(d))
 
 int combat(ArrayDeque *p1, ArrayDeque *p2) {
   while (dsize(p1) > 0 && dsize(p2) > 0) {
@@ -64,9 +64,6 @@ int combat(ArrayDeque *p1, ArrayDeque *p2) {
     } else if (c2 > c1) {
       pushb(p2, c2);
       pushb(p2, c1);
-    } else {
-      fprintf(stderr, "Tie, how?\n");
-      exit(EXIT_FAILURE);
     }
   }
 }
@@ -85,10 +82,11 @@ typedef struct stateset {
   UT_hash_handle hh;
 } StateSet;
 
+static int key[ARRAYDEQUE_SIZE];
+
 int recursivecombat(ArrayDeque *p1, ArrayDeque *p2) {
-  // static int depth = 0;
-  // printf("Depth: %d\n", ++depth);
   StateSet *state, *ostate, *states = NULL;
+  size_t keylen = sizeof(int) * (dsize(p1) + 1 + dsize(p2));
   int winner;
   while (true) {
     if (dsize(p1) == 0) {
@@ -100,24 +98,22 @@ int recursivecombat(ArrayDeque *p1, ArrayDeque *p2) {
       break;
     }
 
-    size_t keylen = sizeof(int) * (dsize(p1) + 1 + dsize(p2));
-    int *key = malloc(keylen);
     fillstate(p1, p2, key);
     HASH_FIND(hh, states, key, keylen, ostate);
     if (ostate != NULL) {
-      free(key);
       winner = 0;
       break;
     }
     state = malloc(sizeof(*state));
-    state->hands = key;
+    state->hands = malloc(keylen);
+    memcpy(state->hands, &key, keylen);
     HASH_ADD_KEYPTR(hh, states, key, keylen, state);
 
     int c1 = pollf(p1);
     int c2 = pollf(p2);
     if (dsize(p1) >= c1 && dsize(p2) >= c2) {
-      ArrayDeque *p1r = copyd(p1);
-      ArrayDeque *p2r = copyd(p2);
+      ArrayDeque *p1r = sliced(p1, 0, c1);
+      ArrayDeque *p2r = sliced(p2, 0, c2);
       winner = recursivecombat(p1r, p2r);
       free(p1r);
       free(p2r);
@@ -134,9 +130,6 @@ int recursivecombat(ArrayDeque *p1, ArrayDeque *p2) {
     } else if (c2 > c1) {
       pushb(p2, c2);
       pushb(p2, c1);
-    } else {
-      fprintf(stderr, "Tie, how?\n");
-      exit(EXIT_FAILURE);
     }
   }
 
@@ -146,7 +139,6 @@ int recursivecombat(ArrayDeque *p1, ArrayDeque *p2) {
     free(state);
   }
 
-  // --depth;
   return winner;
 }
 
