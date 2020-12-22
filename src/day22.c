@@ -2,12 +2,9 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
-#include "util.h"
 #include "../lib/uthash.h"
 
 #define ARRAYDEQUE_SIZE 64
-
-typedef struct deck Deck;
 
 typedef struct arraydeque {
   int values[ARRAYDEQUE_SIZE];
@@ -50,27 +47,15 @@ static void pushb(ArrayDeque *d, int v) {
 }
 
 static ArrayDeque *copyd(ArrayDeque *d) {
-  // printf("Copying\n");
-  // printdeck(d);
   ArrayDeque *r = malloc(sizeof(*d));
   memcpy(r->values, &d->values[d->min], sizeof(int) * dsize(d));
   r->min = 0;
   r->max = dsize(d);
-  // printdeck(r);
   return r;
-}
-
-void printstate(ArrayDeque *p1, ArrayDeque *p2) {
-  printf("---\n");
-  printf("Player 1 hand: ");
-  printdeck(p1);
-  printf("Player 2 hand: ");
-  printdeck(p2);
 }
 
 int combat(ArrayDeque *p1, ArrayDeque *p2) {
   while (dsize(p1) > 0 && dsize(p2) > 0) {
-    // printstate(p1, p2);
     int c1 = pollf(p1);
     int c2 = pollf(p2);
     if (c1 > c2) {
@@ -103,12 +88,9 @@ typedef struct stateset {
 int recursivecombat(ArrayDeque *p1, ArrayDeque *p2) {
   // static int depth = 0;
   // printf("Depth: %d\n", ++depth);
-
   StateSet *state, *ostate, *states = NULL;
   int winner;
   while (true) {
-    // printf("---- Round %d ----\n", ++round);
-    // printstate(p1, p2);
     if (dsize(p1) == 0) {
       winner = 1;
       break;
@@ -123,7 +105,6 @@ int recursivecombat(ArrayDeque *p1, ArrayDeque *p2) {
     fillstate(p1, p2, key);
     HASH_FIND(hh, states, key, keylen, ostate);
     if (ostate != NULL) {
-      // printf("Victory by repeat.\n");
       free(key);
       winner = 0;
       break;
@@ -169,6 +150,15 @@ int recursivecombat(ArrayDeque *p1, ArrayDeque *p2) {
   return winner;
 }
 
+ArrayDeque *readdeck(FILE *fp) {
+  ArrayDeque *d = malloc(sizeof(ArrayDeque));
+  d->min = d->max = 0;
+  assert(fscanf(fp, "Player %*d:\n") == 0);
+  int i;
+  while (fscanf(fp, "%d\n", &i) == 1) pushb(d, i);
+  return d;
+}
+
 // destructive
 long countscore(ArrayDeque *d) {
   long score = 0;
@@ -176,16 +166,6 @@ long countscore(ArrayDeque *d) {
     score += pollb(d) * i;
   }
   return score;
-}
-
-ArrayDeque *readdeck(FILE *fp) {
-  ArrayDeque *d = malloc(sizeof(ArrayDeque));
-  d->min = 0;
-  d->max = 0;
-  assert(fscanf(fp, "Player %*d:\n") == 0);
-  int i;
-  while (fscanf(fp, "%d\n", &i) == 1) pushb(d, i);
-  return d;
 }
 
 void day22() {
