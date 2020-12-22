@@ -64,7 +64,7 @@ from the minibuffer."
                 (if (called-interactively-p 'interactive)
                     (read-string "Arguments: ")
                   args)
-              "-k"))))
+              "CFLAGS='-g'"))))
 
 (defun aoc-get-session ()
   "Get the session key from root/session.key."
