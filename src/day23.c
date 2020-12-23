@@ -35,21 +35,18 @@ Cup *crabgame(Cup *cups, int rounds, int maxc) {
     values[hand->val - 1] = hand;
   }
 
-  int target;
   for (int i = 0; i < rounds; ++i) {
     hand = cups->next;
     cups->next = hand->next->next->next;
 
-    target = cups->val - 1;
-  findtarget:
-    if (target < CUP_MIN) target = maxc;
-    dest = values[target - 1];
-    if (dest == hand ||
-        dest == hand->next ||
-        dest == hand->next->next) {
+    int target = cups->val;
+    do {
       --target;
-      goto findtarget;
-    }
+      if (target < CUP_MIN) target = maxc;
+      dest = values[target - 1];
+    } while (dest == hand ||
+             dest == hand->next ||
+             dest == hand->next->next);
 
     hand->next->next->next = dest->next;
     dest->next = hand;
@@ -62,15 +59,7 @@ Cup *crabgame(Cup *cups, int rounds, int maxc) {
   return cups;
 }
 
-Cup *memv(Cup *list, int val) {
-  if (list->val == val) return list;
-  for (Cup *n = list->next; n != list; n = n->next) {
-    if (n->val == val) return n;
-  }
-  return NULL;
-}
-
-void printend(Cup *start) {
+void printp1(Cup *start) {
   printf("Cups: ");
   for (Cup *cups = start->next; cups != start; cups = cups->next) {
     printf("%d", cups->val);
@@ -78,15 +67,29 @@ void printend(Cup *start) {
   printf("\n");
 }
 
+void printp2(Cup *start) {
+  Cup *n = start->next;
+  printf("Stars: under %d * %d = %ld\n",
+         n->val, n->next->val,
+         (long) n->val * (long) n->next->val);
+}
+
+void freecups(Cup *cups) {
+  Cup *start = cups->next;
+  cups->next = NULL;
+  STACK_CLEAR_WITH(start, next);
+}
+
 void day23() {
   FILE *input = fopen("input/23.txt", "r");
 
   Cup *p2c, *p1c, *end;
   end = p2c = malloc(sizeof(Cup));
-  int cupc = 0;
 
   end->val = getc(input) - '0';
 
+  // read into two cyclic linked lists
+  int cupc = 1;
   int c;
   while ((c = getc(input)) != '\n' && c != -1) {
     end = end->next = malloc(sizeof(Cup));
@@ -97,7 +100,7 @@ void day23() {
   fclose(input);
 
   STACK_COPY_WITH(p2c, next, p1c);
-  for (cupc = MAXC_1; cupc < MAXC_2; ++cupc) {
+  for (; cupc < MAXC_2; ++cupc) {
     end = end->next = malloc(sizeof(Cup));
     end->val = cupc + 1;
   }
@@ -106,16 +109,9 @@ void day23() {
   for (end = p1c; end->next != NULL; end = end->next);
   end->next = p1c;
 
-  printend(crabgame(p1c, TURNS_1, MAXC_1));
-  end = p1c->next;
-  p1c->next = NULL;
-  STACK_CLEAR_WITH(end, next);
+  printp1(crabgame(p1c, TURNS_1, MAXC_1));
+  freecups(p1c);
 
-  p2c = crabgame(p2c, TURNS_2, MAXC_2)->next;
-  printf("Cups: %d * %d = %ld\n",
-         p2c->val, p2c->next->val,
-         (long) p2c->val * (long) p2c->next->val);
-  end = p2c->next;
-  p2c->next = NULL;
-  STACK_CLEAR_WITH(end, next);
+  printp2(crabgame(p2c, TURNS_2, MAXC_2));
+  freecups(p2c);
 }
